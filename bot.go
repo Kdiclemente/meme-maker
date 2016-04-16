@@ -30,7 +30,7 @@ const (
 	NoAction MessageState = iota
 	MakingMeme
 
-	fontSize = 36
+	fontSize = 20
 )
 
 func init() {
@@ -65,6 +65,8 @@ func messages(m messenger.Message, r *messenger.Response) {
 		return
 	}
 
+	fmt.Println(m.Sender.ID)
+
 	state := messageState(m.Sender)
 
 	switch state {
@@ -91,7 +93,13 @@ func messages(m messenger.Message, r *messenger.Response) {
 		}
 
 		if meme.Ready() {
-			meme.Make()
+			err = r.Image(meme.Make())
+			if err != nil {
+				fmt.Println("error encoding image:", err)
+				return
+			}
+
+			fmt.Println("Done!")
 		}
 	}
 }
@@ -123,11 +131,11 @@ func (m Meme) Ready() bool {
 	return m.ImageURL != "" && m.Text != ""
 }
 
-func (m Meme) Make() {
+func (m Meme) Make() image.Image {
 	res, err := http.Get(m.ImageURL)
 	if err != nil {
 		fmt.Println("error downloading image:", err)
-		return
+		return nil
 	}
 
 	defer res.Body.Close()
@@ -164,4 +172,6 @@ func (m Meme) Make() {
 	final.DrawStringAnchored(m.Text, float64(w)/2, float64(h)-fontSize, 0.5, 0.5)
 
 	final.SavePNG("output.png")
+
+	return final.Image()
 }
