@@ -2,8 +2,11 @@ package main
 
 import (
 	"fmt"
+	"image"
+	_ "image/jpeg"
 	"net/http"
 
+	"github.com/fogleman/gg"
 	"github.com/paked/configure"
 	"github.com/paked/messenger"
 )
@@ -15,6 +18,7 @@ var (
 	verifyToken = conf.String("verify-token", "mad-skrilla", "The token used to verify facebook")
 	verify      = conf.Bool("should-verify", false, "Whether or not the app should verify itself")
 	pageToken   = conf.String("page-token", "not skrilla", "The token that is used to verify the page on facebook")
+	font        = conf.String("font", "fonts/Economica-Bold.ttf", "The font you want the meme maker to use")
 
 	states map[int64]MessageState
 	memes  map[int64]*Meme
@@ -25,6 +29,8 @@ var (
 const (
 	NoAction MessageState = iota
 	MakingMeme
+
+	fontSize = 36
 )
 
 func init() {
@@ -84,7 +90,9 @@ func messages(m messenger.Message, r *messenger.Response) {
 			meme.Text = m.Text
 		}
 
-		fmt.Println(meme.Ready())
+		if meme.Ready() {
+			meme.Make()
+		}
 	}
 }
 
@@ -113,4 +121,47 @@ type Meme struct {
 
 func (m Meme) Ready() bool {
 	return m.ImageURL != "" && m.Text != ""
+}
+
+func (m Meme) Make() {
+	res, err := http.Get(m.ImageURL)
+	if err != nil {
+		fmt.Println("error downloading image:", err)
+		return
+	}
+
+	defer res.Body.Close()
+
+	background, _, err := image.Decode(res.Body)
+	if err != nil {
+		fmt.Println("error decoding image:", err)
+	}
+
+	r := background.Bounds()
+	w := r.Dx()
+	h := r.Dy()
+
+	final := gg.NewContext(w, h)
+	final.DrawImage(background, 0, 0)
+	final.LoadFontFace(*font, fontSize)
+
+	final.SetHexColor("#000")
+	strokeSize := 6
+	for dy := -strokeSize; dy <= strokeSize; dy++ {
+		for dx := -strokeSize; dx <= strokeSize; dx++ {
+			// give it rounded corners
+			if dx*dx+dy*dy >= strokeSize*strokeSize {
+				continue
+			}
+
+			x := float64(w/2 + dx)
+			y := float64(h - fontSize + dy)
+			final.DrawStringAnchored(m.Text, x, y, 0.5, 0.5)
+		}
+	}
+
+	final.SetHexColor("#FFF")
+	final.DrawStringAnchored(m.Text, float64(w)/2, float64(h)-fontSize, 0.5, 0.5)
+
+	final.SavePNG("output.png")
 }
