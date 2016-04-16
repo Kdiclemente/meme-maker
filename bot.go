@@ -171,7 +171,5 @@ func (m Meme) Make() image.Image {
 	final.SetHexColor("#FFF")
 	final.DrawStringAnchored(m.Text, float64(w)/2, float64(h)-fontSize, 0.5, 0.5)
 
-	final.SavePNG("output.png")
-
 	return final.Image()
 }
