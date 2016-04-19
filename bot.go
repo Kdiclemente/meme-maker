@@ -99,6 +99,7 @@ func messages(m messenger.Message, r *messenger.Response) {
 			}
 
 			fmt.Println("Done!")
+			*meme = Meme{}
 		}
 	}
 }
