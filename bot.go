@@ -70,7 +70,7 @@ func messages(m messenger.Message, r *messenger.Response) {
 
 	switch state {
 	case NoAction:
-		r.Text(fmt.Sprintf("Greetings, %v? You're here to make a meme?", from.FirstName))
+		r.Text(fmt.Sprintf("Greetings, %v. You're here to make a meme?", from.FirstName))
 		r.Text("If so, you are in just the right place.")
 		r.Text("All you need to do is send me a picture and a line of text to put on that picture!")
 
