@@ -30,8 +30,6 @@ var (
 const (
 	NoAction MessageState = iota
 	MakingMeme
-
-	fontSize = 20
 )
 
 func init() {
@@ -165,6 +163,7 @@ func (m Meme) Make() image.Image {
 
 			x := float64(w/2 + dx)
 			y := float64(h+dy) - fontSize
+
 			final.DrawStringAnchored(m.Text, x, y, 0.5, 0.5)
 		}
 	}
@@ -184,12 +183,12 @@ func findIdealFontSize(img *gg.Context, text string) float64 {
 	step := maxSize / 10
 	size := step
 
-	line := longestLine(img.WordWrap(text, w))
-
 	for {
 		img.LoadFontFace(*font, size)
+
+		line := longestLine(img.WordWrap(text, w))
+
 		dw, dh := img.MeasureString(line)
-		fmt.Println(dh, maxSize, dw, w, size)
 		if dh > maxSize || dw > w {
 			size -= step
 			break
