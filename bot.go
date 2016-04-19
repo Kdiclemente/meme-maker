@@ -6,8 +6,8 @@ import (
 	_ "image/jpeg"
 	"net/http"
 
-	"github.com/fogleman/gg"
 	"github.com/paked/configure"
+	"github.com/paked/gg"
 	"github.com/paked/messenger"
 )
 
@@ -151,7 +151,7 @@ func (m Meme) Make() image.Image {
 
 	final := gg.NewContext(w, h)
 	final.DrawImage(background, 0, 0)
-	final.LoadFontFace(*font, fontSize)
+	fontSize := findIdealFontSize(final, m.Text)
 
 	final.SetHexColor("#000")
 	strokeSize := 6
@@ -163,7 +163,7 @@ func (m Meme) Make() image.Image {
 			}
 
 			x := float64(w/2 + dx)
-			y := float64(h - fontSize + dy)
+			y := float64(h+dy) - fontSize
 			final.DrawStringAnchored(m.Text, x, y, 0.5, 0.5)
 		}
 	}
@@ -172,4 +172,45 @@ func (m Meme) Make() image.Image {
 	final.DrawStringAnchored(m.Text, float64(w)/2, float64(h)-fontSize, 0.5, 0.5)
 
 	return final.Image()
+}
+
+func findIdealFontSize(img *gg.Context, text string) float64 {
+	w := float64(img.Width())
+	w -= w / 5
+	h := float64(img.Height())
+
+	maxSize := h / 6
+	step := maxSize / 10
+	size := step
+
+	line := longestLine(img.WordWrap(text, w))
+
+	for {
+		img.LoadFontFace(*font, size)
+		dw, dh := img.MeasureString(line)
+		fmt.Println(dh, maxSize, dw, w, size)
+		if dh > maxSize || dw > w {
+			size -= step
+			break
+		}
+
+		size += step
+	}
+
+	return size
+}
+
+func longestLine(lines []string) string {
+	var max int
+	var lineIndex int
+
+	for i, line := range lines {
+		l := len(line)
+		if l > max {
+			max = l
+			lineIndex = i
+		}
+	}
+
+	return lines[lineIndex]
 }
