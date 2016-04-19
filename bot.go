@@ -5,6 +5,7 @@ import (
 	"image"
 	_ "image/jpeg"
 	"net/http"
+	"strings"
 
 	"github.com/paked/configure"
 	"github.com/paked/gg"
@@ -89,7 +90,7 @@ func messages(m messenger.Message, r *messenger.Response) {
 		}
 
 		if m.Text != "" {
-			meme.Text = m.Text
+			meme.Text = strings.ToUpper(m.Text)
 		}
 
 		if meme.Ready() {
