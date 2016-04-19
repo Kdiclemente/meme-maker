@@ -54,7 +54,7 @@ func main() {
 
 	fmt.Println("Serving messenger bot on localhost:8080")
 
-	http.ListenAndServe("localhost:8080", client.Handler())
+	http.ListenAndServe(":8080", client.Handler())
 }
 
 func messages(m messenger.Message, r *messenger.Response) {
